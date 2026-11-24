@@ -356,6 +356,30 @@ class PublicInvestorPageTests(TestCase):
         self.assertEqual([doc["title"] for doc in board["documents"]], ["Published Note"])
 
 
+class DashboardLoginTests(TestCase):
+    def test_bad_password_is_rejected_without_server_error(self):
+        response = self.client.post(
+            reverse("dashboard_login"),
+            {"username": "missing-user", "password": "wrong-pass"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid Employee ID or Password.")
+
+    def test_employee_id_login_opens_documents(self):
+        user = User.objects.create_user(username="emp.one", password="pass12345")
+        user.profile.employee_id = "NL1001"
+        user.profile.role = "EMPLOYEE"
+        user.profile.approval_status = "APPROVED"
+        user.profile.save()
+
+        response = self.client.post(
+            reverse("dashboard_login"),
+            {"username": "NL1001", "password": "pass12345"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("documents"))
+
+
 class DomainBindingTests(TestCase):
     def test_old_cms_prefix_redirects_to_root(self):
         response = self.client.get("/CMS/", follow=False)

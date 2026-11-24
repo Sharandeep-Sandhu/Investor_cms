@@ -89,9 +89,11 @@ done
 if [ -n "$VENV_PIP" ]; then
   VENV_BIN="$(dirname "$VENV_PIP")"
   "$VENV_PIP" install -r "$APP_DIR/requirements.txt"
+  "$VENV_BIN/python" "$APP_DIR/manage.py" migrate --noinput
   "$VENV_BIN/python" "$APP_DIR/manage.py" collectstatic --noinput
 else
   echo "WARNING: venv not found under $APP_DIR or $(dirname "$APP_DIR"); skip pip/collectstatic"
+  python3 "$APP_DIR/manage.py" migrate --noinput
 fi
 
 sed -e "s|/var/www/investor-cms|$APP_DIR|g" -e "s|127.0.0.1:8001|127.0.0.1:${APP_PORT}|g" -e "s|127.0.0.1:8002|127.0.0.1:${APP_PORT}|g" "$APP_DIR/deploy/nginx-nibelimited.conf" > "$NGINX_AVAIL"
